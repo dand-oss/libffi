@@ -19,14 +19,15 @@ else()
 endif (BUILD_SHARED_LIBS)
 
 list(APPEND include_dirs
-    "." # fficonfig.h
-    "include"
-    "src/x86"
+    "${CMAKE_CURRENT_BINARY_DIR}" # fficonfig.h
+    "${CMAKE_CURRENT_BINARY_DIR}/include" # ffi.h
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/x86"
     )
 
 # option version of includes
 foreach(dd ${include_dirs})
-    list(APPEND include_opts "-I" "${CMAKE_SOURCE_DIR}/${dd}")
+    list(APPEND include_opts "-I" "${dd}")
 endforeach()
 
 # select sources by platform
@@ -64,6 +65,13 @@ foreach(ff ${asm_basenames})
     # add asm to compile list
     set_source_files_properties(${f_asm} PROPERTIES GENERATED TRUE)
     target_sources(${libname} PRIVATE ${f_asm})
+endforeach()
+
+# run configure
+list(APPEND conf_files "fficonfig.h" "include/ffi.h")
+foreach(ff ${conf_files})
+    message("configuring '${ff}'")
+    configure_file("${ff}.in" "${ff}")
 endforeach()
 
 target_sources(${libname} PRIVATE
