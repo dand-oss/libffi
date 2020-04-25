@@ -3,6 +3,13 @@ project(libffi C ASM_MASM)
 
 set(libname "libffi")
 
+###############
+# ASI default settings
+list(APPEND CMAKE_MODULE_PATH "$ENV{ASV_CMAKE}")
+include(asv_cmake_defaults)
+asv_cmake_defaults( )
+###############
+
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 if (BUILD_SHARED_LIBS)
