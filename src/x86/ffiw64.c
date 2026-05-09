@@ -58,6 +58,7 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
   switch (cif->abi)
     {
     case FFI_WIN64:
+    case FFI_VECTORCALL_PARTIAL:
     case FFI_GNUW64:
       break;
     default:
@@ -126,7 +127,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   ffi_type **arg_types = cif->arg_types;
   int nargs = cif->nargs;
 
-  FFI_ASSERT(cif->abi == FFI_GNUW64 || cif->abi == FFI_WIN64);
+  FFI_ASSERT(cif->abi == FFI_GNUW64 || cif->abi == FFI_WIN64 || cif->abi == FFI_VECTORCALL_PARTIAL);
 
   /* If we have any large structure arguments, make a copy so we are passing
      by value.  */
@@ -244,6 +245,7 @@ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
   switch (cif->abi)
     {
     case FFI_WIN64:
+    case FFI_VECTORCALL_PARTIAL:
     case FFI_GNUW64:
       break;
     default:
@@ -281,6 +283,7 @@ EFI64(ffi_prep_go_closure)(ffi_go_closure* closure, ffi_cif* cif,
   switch (cif->abi)
     {
     case FFI_WIN64:
+    case FFI_VECTORCALL_PARTIAL:
     case FFI_GNUW64:
       break;
     default:

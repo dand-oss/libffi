@@ -23,8 +23,7 @@ all:
 	cd ..\..
 	-rmdir /s /q $(OUTPUT)
 	xcopy include\ffi.h $(OUTPUT)\include\*
-#	sed -i "s/#if defined _MSC_VER && !defined FFI_BUILDING/#if 0 \/*defined _MSC_VER \&\& !defined FFI_BUILDING*\//" $(OUTPUT)\include\ffi.h
-	sed -i "s/#define LIBFFI_H/#define LIBFFI_H\n#define FFI_BUILDING/" $(OUTPUT)\include\ffi.h
+	sed -i "s/#define LIBFFI_H/#define LIBFFI_H\n#define FFI_STATIC_BUILD\n#define FFI_BUILDING/" $(OUTPUT)\include\ffi.h
 	xcopy src\x86\ffitarget.h $(OUTPUT)\include\*
 	xcopy fficonfig.h $(OUTPUT)\include\*
 	xcopy win32\$(PHP_SDK_VS)_$(PHP_SDK_ARCH)\$(SUBFOLDER)\Release\libffi.lib $(OUTPUT)\lib\*
