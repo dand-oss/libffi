@@ -41,6 +41,9 @@
 
 #if defined (X86_64) && defined (__i386__)
 #undef X86_64
+#warning ******************************************************
+#warning ********** X86 IS DEFINED ****************************
+#warning ******************************************************
 #define X86
 #endif
 
@@ -82,13 +85,12 @@ typedef enum ffi_abi {
   FFI_FIRST_ABI = 0,
   FFI_WIN64,            /* sizeof(long double) == 8  - microsoft compilers */
   FFI_GNUW64,           /* sizeof(long double) == 16 - GNU compilers */
-  FFI_VECTORCALL_PARTIAL,
   FFI_LAST_ABI,
 #ifdef __GNUC__
   FFI_DEFAULT_ABI = FFI_GNUW64
-#else  
+#else
   FFI_DEFAULT_ABI = FFI_WIN64
-#endif  
+#endif
 
 #elif defined(X86_64) || (defined (__x86_64__) && defined (X86_DARWIN))
   FFI_FIRST_ABI = 1,
@@ -108,7 +110,6 @@ typedef enum ffi_abi {
   FFI_MS_CDECL  = 5,
   FFI_PASCAL    = 6,
   FFI_REGISTER  = 7,
-  FFI_VECTORCALL_PARTIAL = 8,
   FFI_LAST_ABI,
   FFI_DEFAULT_ABI = FFI_MS_CDECL
 #else
@@ -138,12 +139,26 @@ typedef enum ffi_abi {
 
 #if defined (X86_64) || defined(X86_WIN64) \
     || (defined (__x86_64__) && defined (X86_DARWIN))
-# define FFI_TRAMPOLINE_SIZE 24
+/* 4 bytes of ENDBR64 + 7 bytes of LEA + 6 bytes of JMP + 7 bytes of NOP
+   + 8 bytes of pointer.  */
+# define FFI_TRAMPOLINE_SIZE 32
 # define FFI_NATIVE_RAW_API 0
 #else
-# define FFI_TRAMPOLINE_SIZE 12
+/* 4 bytes of ENDBR32 + 5 bytes of MOV + 5 bytes of JMP + 2 unused
+   bytes.  */
+# define FFI_TRAMPOLINE_SIZE 16
 # define FFI_NATIVE_RAW_API 1  /* x86 has native raw api support */
 #endif
 
+#if !defined(GENERATE_LIBFFI_MAP) && defined(__CET__)
+# include <cet.h>
+# if (__CET__ & 1) != 0
+#   define ENDBR_PRESENT
+# endif
+# define _CET_NOTRACK notrack
+#else
+# define _CET_ENDBR
+# define _CET_NOTRACK
 #endif
 
+#endif
