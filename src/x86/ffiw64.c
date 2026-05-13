@@ -134,7 +134,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   for (i = 0; i < nargs; i++)
     {
       ffi_type *at = arg_types[i];
-      int size = at->size;
+      size_t size = at->size;
       if (at->type == FFI_TYPE_STRUCT && size > 8)
         {
           char *argcopy = alloca (size);
@@ -174,24 +174,15 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 
   for (i = 0, n = cif->nargs; i < n; ++i, ++j)
     {
-      switch (cif->arg_types[i]->size)
+      size_t size = cif->arg_types[i]->size;
+      if (size <= sizeof(UINT64))
 	{
-	case 8:
-	  stack[j] = *(UINT64 *)avalue[i];
-	  break;
-	case 4:
-	  stack[j] = *(UINT32 *)avalue[i];
-	  break;
-	case 2:
-	  stack[j] = *(UINT16 *)avalue[i];
-	  break;
-	case 1:
-	  stack[j] = *(UINT8 *)avalue[i];
-	  break;
-	default:
-	  stack[j] = (uintptr_t)avalue[i];
-	  break;
+	  UINT64 value = 0;
+	  memcpy (&value, avalue[i], size);
+	  stack[j] = value;
 	}
+      else
+	stack[j] = (uintptr_t)avalue[i];
     }
 
   ffi_call_win64 (stack, frame, closure);
