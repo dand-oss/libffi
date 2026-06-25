@@ -59,6 +59,7 @@ EFI64(ffi_prep_cif_machdep)(ffi_cif *cif)
   switch (cif->abi)
     {
     case FFI_WIN64:
+    case FFI_VECTORCALL_PARTIAL:
     case FFI_GNUW64:
       break;
     default:
@@ -128,14 +129,14 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   ffi_type **arg_types = cif->arg_types;
   int nargs = cif->nargs;
 
-  FFI_ASSERT(cif->abi == FFI_GNUW64 || cif->abi == FFI_WIN64);
+  FFI_ASSERT(cif->abi == FFI_GNUW64 || cif->abi == FFI_WIN64 || cif->abi == FFI_VECTORCALL_PARTIAL);
 
   /* If we have any int128 or irregularly sized structure arguments,
      make a copy so we are passing by value.  */
   for (i = 0; i < nargs; i++)
     {
       ffi_type *at = arg_types[i];
-      int size = at->size;
+      size_t size = at->size;
       bool needcopy = false;
 
       switch (at->type)
@@ -195,24 +196,15 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 
   for (i = 0, n = cif->nargs; i < n; ++i, ++j)
     {
-      switch (cif->arg_types[i]->size)
+      size_t size = cif->arg_types[i]->size;
+      if (size <= sizeof(UINT64))
 	{
-	case 8:
-	  stack[j] = *(UINT64 *)avalue[i];
-	  break;
-	case 4:
-	  stack[j] = *(UINT32 *)avalue[i];
-	  break;
-	case 2:
-	  stack[j] = *(UINT16 *)avalue[i];
-	  break;
-	case 1:
-	  stack[j] = *(UINT8 *)avalue[i];
-	  break;
-	default:
-	  stack[j] = (uintptr_t)avalue[i];
-	  break;
+	  UINT64 value = 0;
+	  memcpy (&value, avalue[i], size);
+	  stack[j] = value;
 	}
+      else
+	stack[j] = (uintptr_t)avalue[i];
     }
 
   ffi_call_win64 (stack, frame, closure);
@@ -266,6 +258,7 @@ EFI64(ffi_prep_closure_loc)(ffi_closure* closure,
   switch (cif->abi)
     {
     case FFI_WIN64:
+    case FFI_VECTORCALL_PARTIAL:
     case FFI_GNUW64:
       break;
     default:
@@ -303,6 +296,7 @@ EFI64(ffi_prep_go_closure)(ffi_go_closure* closure, ffi_cif* cif,
   switch (cif->abi)
     {
     case FFI_WIN64:
+    case FFI_VECTORCALL_PARTIAL:
     case FFI_GNUW64:
       break;
     default:
